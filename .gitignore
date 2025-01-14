@@ -1,0 +1,7 @@
+/target
+Cargo.lock
+.env
+watchtower.session
+.cargo/
+releases/
+config.json
