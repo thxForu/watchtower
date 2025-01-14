@@ -1,6 +1,6 @@
 use crate::auth::Auth;
-use crate::config::Config;
-use grammers_client::{Client, Config as ClientConfig, InitParams, InputMessage};
+use crate::constants::CONSTANTS;
+use grammers_client::{Client, Config, InitParams, InputMessage};
 use grammers_session::{PackedChat, Session};
 use rustyline::DefaultEditor;
 use std::error::Error;
@@ -9,27 +9,24 @@ use tokio::time::sleep;
 
 pub struct TelegramBot {
     auth: Auth,
-    config: Config,
 }
 
 impl TelegramBot {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
-        let config = Config::load()?;
-
-        let client_config = ClientConfig {
-            api_id: config.api_id,
-            api_hash: config.api_hash.clone(),
-            session: Session::load_file_or_create(&config.session_file)?,
+        let config = Config {
+            api_id: CONSTANTS.api_id,
+            api_hash: CONSTANTS.api_hash.to_string(),
+            session: Session::load_file_or_create(CONSTANTS.session_file)?,
             params: InitParams {
                 catch_up: true,
                 ..InitParams::default()
             },
         };
 
-        let client = Client::connect(client_config).await?;
-        let auth = Auth::new(client, config.clone());
+        let client = Client::connect(config).await?;
+        let auth = Auth::new(client);
 
-        Ok(Self { auth, config })
+        Ok(Self { auth })
     }
 
     pub async fn run(&self) -> Result<(), Box<dyn Error>> {
@@ -66,13 +63,12 @@ impl TelegramBot {
     ) -> Result<(), Box<dyn Error>> {
         let mut tasks = Vec::new();
         let client = self.auth.get_client();
-        let config = &self.config;
 
         for username in usernames {
             let client_clone = client.clone();
             let username_clone = username.clone();
-            let schedule_interval = config.schedule_interval;
-            let sleep_interval = config.sleep_interval;
+            let schedule_interval = CONSTANTS.schedule_interval;
+            let sleep_interval = CONSTANTS.sleep_interval;
 
             let handle = tokio::spawn(async move {
                 if let Err(e) = Self::handle_user_messages(
@@ -109,7 +105,7 @@ impl TelegramBot {
             Err(e) => return Err(format!("Error resolving username {}: {:?}", username, e).into()),
         };
 
-        let message = Self::create_scheduled_message( schedule_interval);
+        let message = Self::create_scheduled_message(schedule_interval);
         let sent_message = client.send_message(chat, message).await?;
 
         Self::run_reschedule_loop(

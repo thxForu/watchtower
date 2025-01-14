@@ -1,6 +1,6 @@
 mod auth;
 mod bot;
-mod config;
+mod constants;
 
 use bot::TelegramBot;
 

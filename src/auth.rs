@@ -1,13 +1,12 @@
-use crate::config::Config;
+use crate::constants::CONSTANTS;
 use grammers_client::{Client, SignInError};
+use rpassword::read_password;
 use rustyline::DefaultEditor;
 use std::error::Error;
-use rpassword::read_password;
 
 #[derive(Debug)]
 pub struct Auth {
     client: Client,
-    config: Config,
 }
 
 #[derive(Debug)]
@@ -22,8 +21,8 @@ impl std::fmt::Display for AuthError {
 impl Error for AuthError {}
 
 impl Auth {
-    pub fn new(client: Client, config: Config) -> Self {
-        Self { client, config }
+    pub fn new(client: Client) -> Self {
+        Self { client }
     }
 
     pub async fn ensure_authorized(&self) -> Result<(), Box<dyn Error>> {
@@ -37,9 +36,9 @@ impl Auth {
     async fn authenticate(&self) -> Result<(), Box<dyn Error>> {
         let phone = Self::prompt_input("Enter the phone number:")?;
         let token = self.client.request_login_code(&phone).await?;
-        
+
         let code = Self::prompt_input("Enter the code received in Telegram:")?;
-        
+
         match self.client.sign_in(&token, &code).await {
             Ok(_) => {
                 println!("Successfully signed in!");
@@ -49,7 +48,7 @@ impl Auth {
             Err(SignInError::PasswordRequired(password_token)) => {
                 self.handle_2fa(password_token).await
             }
-            Err(e) => Err(Box::new(AuthError(e.to_string())))
+            Err(e) => Err(Box::new(AuthError(e.to_string()))),
         }
     }
 
@@ -60,17 +59,19 @@ impl Auth {
         let hint = password_token.hint().unwrap_or("None");
         print!("Enter the password (hint {}): ", hint);
         std::io::Write::flush(&mut std::io::stdout())?;
-        
+
         let password = read_password()?;
-        
-        self.client.check_password(password_token, &password).await?;
+
+        self.client
+            .check_password(password_token, &password)
+            .await?;
         self.save_session()?;
         Ok(())
     }
 
     fn save_session(&self) -> Result<(), Box<dyn Error>> {
         println!("Saving session");
-        self.client.session().save_to_file(&self.config.session_file)?;
+        self.client.session().save_to_file(CONSTANTS.session_file)?;
         Ok(())
     }
 
