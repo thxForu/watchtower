@@ -7,7 +7,7 @@ A monitoring tool that uses Telegram's scheduled messages to detect server downt
 The bot continuously reschedules a message to be sent in the future for each monitored user. If the server goes down, it will stop rescheduling, and the message will be sent to the specified Telegram users, effectively alerting them about the server downtime.
 
 This approach provides a reliable "dead man's switch" mechanism:
-- While the server is running: The bot continuously postpones the message
+- While the server is running: The bot continuously reschedule the message
 - If server fails: The message gets delivered, indicating system failure
 - No false positives: Only triggers when the server actually stops working
 
@@ -35,13 +35,6 @@ Build for your platform:
 cargo build --release
 ```
 
-For cross-platform builds, use the provided script:
-```bash
-./build-release.sh
-```
-
-This will create binaries for both Linux and Windows in the `releases` directory.
-
 ## Running
 
 Simply run the binary for your platform:
@@ -55,8 +48,6 @@ Windows:
 ```bash
 watchtower-win-x64.exe
 ```
-
-Note: Configuration is embedded in the binary, no additional config files needed to run.
 
 ## Development
 
