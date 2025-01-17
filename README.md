@@ -30,11 +30,20 @@ The configuration values are compiled into the binary during build time. You nee
 
 ## Building
 
-Build for your platform:
+For Linux (static binary):
 ```bash
-cargo build --release
+# Install MUSL and build
+sudo apt install musl-tools
+rustup target add x86_64-unknown-linux-musl
+cargo build --release --target x86_64-unknown-linux-musl
 ```
-
+For Windows:
+```bash
+# Install MinGW and build
+sudo apt install mingw-w64
+rustup target add x86_64-pc-windows-gnu
+cargo build --release --target x86_64-pc-windows-gnu
+```
 ## Running
 
 Simply run the binary for your platform:
