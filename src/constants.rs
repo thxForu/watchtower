@@ -1,6 +1,4 @@
 use serde::Deserialize;
-use std::fs::File;
-use std::io::Read;
 
 #[derive(Debug, Deserialize)]
 struct ConfigFile {
@@ -21,13 +19,10 @@ pub struct Constants {
 
 impl Constants {
     pub fn new() -> Self {
-        let mut file = File::open("config.json").expect("Failed to open config.json");
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)
-            .expect("Failed to read config.json");
-
-        let config: ConfigFile =
-            serde_json::from_str(&contents).expect("Failed to parse config.json");
+        const CONFIG: &str = include_str!("../config.json");
+        
+        let config: ConfigFile = serde_json::from_str(CONFIG)
+            .expect("Failed to parse embedded config");
 
         Self {
             api_id: config.api_id,
