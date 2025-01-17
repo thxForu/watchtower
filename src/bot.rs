@@ -105,7 +105,7 @@ impl TelegramBot {
             Err(e) => return Err(format!("Error resolving username {}: {:?}", username, e).into()),
         };
 
-        let message = Self::create_scheduled_message(schedule_interval);
+        let message = Self::create_scheduled_message(schedule_interval, 0);
         let sent_message = client.send_message(chat, message).await?;
 
         Self::run_reschedule_loop(
@@ -119,7 +119,7 @@ impl TelegramBot {
         .await
     }
 
-    fn create_scheduled_message(delay_seconds: u64) -> InputMessage {
+    fn create_scheduled_message(delay_seconds: u64, check_count: u64) -> InputMessage {
         let schedule_time = SystemTime::now() + std::time::Duration::from_secs(delay_seconds);
 
         let current_time = chrono::Local::now();
@@ -128,10 +128,11 @@ impl TelegramBot {
         let message = format!(
             "🚨 SERVER DOWN ALERT!\n\n\
             ⚠️ The server monitoring system has stopped responding!\n\
-            📅 Last alive: {}\n\n
+            📅 Last alive: {}\n\
+            🔄 Check #{}\n\n\
             This message indicates that the server has stopped responding \
             and requires immediate attention.",
-            formatted_time
+            formatted_time, check_count
         );
 
         InputMessage::text(message).schedule_date(Some(schedule_time))
@@ -145,16 +146,19 @@ impl TelegramBot {
         schedule_interval: u64,
         sleep_interval: u64,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
+        let mut check_count: u64 = 1;
+
         loop {
-            let message = Self::create_scheduled_message(schedule_interval);
+            let message = Self::create_scheduled_message(schedule_interval, check_count);
             client.edit_message(chat, message_id, message).await?;
 
             let current_time = chrono::Local::now().format("%H:%M:%S").to_string();
             println!(
-                "[{}] Heartbeat sent for {} (next check in {} seconds)",
-                current_time, username, schedule_interval
+                "[{}] Heartbeat #{} sent for {} (next check in {} seconds)",
+                current_time, check_count, username, schedule_interval
             );
 
+            check_count += 1;
             sleep(tokio::time::Duration::from_secs(sleep_interval)).await;
         }
     }
