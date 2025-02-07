@@ -20,9 +20,9 @@ pub struct Constants {
 impl Constants {
     pub fn new() -> Self {
         const CONFIG: &str = include_str!("../config.json");
-        
-        let config: ConfigFile = serde_json::from_str(CONFIG)
-            .expect("Failed to parse embedded config");
+
+        let config: ConfigFile =
+            serde_json::from_str(CONFIG).expect("Failed to parse embedded config");
 
         Self {
             api_id: config.api_id,

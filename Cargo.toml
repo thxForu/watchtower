@@ -13,6 +13,7 @@ rpassword = "7.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 lazy_static = "1.4"
+clap = { version = "4.5.28", features = ["derive", "string"] }
 
 [profile.release]
 opt-level = 3
