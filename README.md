@@ -44,19 +44,51 @@ sudo apt install mingw-w64
 rustup target add x86_64-pc-windows-gnu
 cargo build --release --target x86_64-pc-windows-gnu
 ```
+
 ## Running
 
 Simply run the binary for your platform:
 
-Linux:
+Linux
 ```bash
-./watchtower-linux-x64
+$ ./watchtower-linux-x64 --users=user1,user2
 ```
 
-Windows:
+Windows
 ```bash
-watchtower-win-x64.exe
+watchtower-win-x64.exe --users=user1,user2
 ```
+
+### Linux. Run in the background.
+To run this program in the background in Linux you can use systemd, screen, nohup command & etc.
+
+To run this program in the background using __nohup command &__, follow these steps:
+
+1. Run the binary for your platform for the first time.
+   You will need to enter your phone number and the code received in
+   Telegram. The program will create the __watchtower.session__ file with
+   information about the session. Then stop the program.
+
+Linux:
+```bash
+$ ./watchtower-linux-x64 --users=user1,user2
+Enter the phone number:
++123456789
+Enter the code received in Telegram:
+12345
+Successfully singed in!
+Saving session
+# stop programm here
+```
+
+2. Now you can run this program in the background using __nohup__ bash command.
+
+Linux:
+```bash
+$ nohup ./watchtower-linux-x64 --users=user1,user2 &
+```
+
+This command starts a process that will ignore the HUP signal and will not stop after the user logs off.
 
 ## Development
 

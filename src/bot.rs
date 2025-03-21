@@ -2,7 +2,6 @@ use crate::auth::Auth;
 use crate::constants::CONSTANTS;
 use grammers_client::{Client, Config, InitParams, InputMessage};
 use grammers_session::{PackedChat, Session};
-use rustyline::DefaultEditor;
 use std::error::Error;
 use std::time::SystemTime;
 use tokio::time::sleep;
@@ -29,32 +28,28 @@ impl TelegramBot {
         Ok(Self { auth })
     }
 
-    pub async fn run(&self) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self, usernames: &str) -> Result<(), Box<dyn Error>> {
         self.auth.ensure_authorized().await?;
 
-        let usernames = self.get_usernames()?;
-        if usernames.is_empty() {
+        let vec_usernames = self.parse_usernames(usernames)?;
+        if vec_usernames.is_empty() {
             println!("No usernames provided. Exiting...");
             return Ok(());
         }
 
-        println!("Starting message scheduling for users: {:?}", usernames);
-        self.schedule_messages_for_users(&usernames).await?;
+        println!("Starting message scheduling for users: {:?}", vec_usernames);
+        self.schedule_messages_for_users(&vec_usernames).await?;
         Ok(())
     }
 
-    fn get_usernames(&self) -> Result<Vec<String>, Box<dyn Error>> {
-        println!("Enter usernames (comma-separated):");
-        let mut editor = DefaultEditor::new()?;
-        let input = editor.readline("> ")?;
-
-        let usernames: Vec<String> = input
+    fn parse_usernames(&self, usernames: &str) -> Result<Vec<String>, Box<dyn Error>> {
+        let result: Vec<String> = usernames
             .split(',')
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .collect();
 
-        Ok(usernames)
+        Ok(result)
     }
 
     async fn schedule_messages_for_users(
